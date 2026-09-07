@@ -40,6 +40,7 @@ app.add_middleware(
     allow_origins=[
         "http://127.0.0.1:5500",
         "http://localhost:5500",
+        "https://event-driven-payment-system-1.onrender.com",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -211,21 +212,12 @@ def create_payment(
     current_user: User = Depends(get_current_user),
 ):
 
-    # -----------------------------------------------------
-    # VALIDATE AMOUNT
-    # -----------------------------------------------------
-
     if request.amount <= 0:
 
         raise HTTPException(
             status_code=400,
             detail="Amount must be greater than zero",
         )
-
-
-    # -----------------------------------------------------
-    # NORMALIZE CURRENCY
-    # -----------------------------------------------------
 
     currency = request.currency.upper().strip()
 
@@ -243,11 +235,6 @@ def create_payment(
             detail="Unsupported currency",
         )
 
-
-    # -----------------------------------------------------
-    # VALIDATE IDEMPOTENCY KEY
-    # -----------------------------------------------------
-
     idempotency_key = (
         request.idempotency_key.strip()
     )
@@ -258,11 +245,6 @@ def create_payment(
             status_code=400,
             detail="Idempotency key is required",
         )
-
-
-    # -----------------------------------------------------
-    # IDEMPOTENCY CHECK
-    # -----------------------------------------------------
 
     existing_payment = (
         db.query(Payment)
@@ -275,14 +257,7 @@ def create_payment(
 
     if existing_payment:
 
-        # Return the original transaction.
-        # This is the idempotency behavior.
         return existing_payment
-
-
-    # -----------------------------------------------------
-    # GENERATE PUBLIC PAYMENT ID
-    # -----------------------------------------------------
 
     payment_id = (
         "PAY-"
@@ -291,32 +266,11 @@ def create_payment(
         .upper()
     )
 
-
-    # -----------------------------------------------------
-    # INITIAL PAYMENT STATE
-    # -----------------------------------------------------
-
-    # Normal transaction:
-    # PENDING -> PROCESSING -> COMPLETED
-    #
-    # Failure test:
-    # PENDING -> PROCESSING -> FAILED
-    #
-    # To test failure, use:
-    # failure-test-001
-    # failure-test-002
-    # etc.
-
     is_failure_test = (
         idempotency_key
         .lower()
         .startswith("failure-test-")
     )
-
-
-    # -----------------------------------------------------
-    # CREATE PAYMENT
-    # -----------------------------------------------------
 
     payment = Payment(
         payment_id=payment_id,
@@ -333,13 +287,7 @@ def create_payment(
 
     db.add(payment)
 
-    # Flush gives us payment.id before commit.
     db.flush()
-
-
-    # -----------------------------------------------------
-    # CREATED EVENT
-    # -----------------------------------------------------
 
     created_event = PaymentEvent(
         payment_id=payment.id,
@@ -349,11 +297,6 @@ def create_payment(
     )
 
     db.add(created_event)
-
-
-    # -----------------------------------------------------
-    # PROCESSING EVENT
-    # -----------------------------------------------------
 
     payment.status = "PROCESSING"
     payment.updated_at = datetime.utcnow()
@@ -366,11 +309,6 @@ def create_payment(
     )
 
     db.add(processing_event)
-
-
-    # -----------------------------------------------------
-    # SIMULATED RESULT
-    # -----------------------------------------------------
 
     if is_failure_test:
 
@@ -407,11 +345,6 @@ def create_payment(
 
         db.add(completed_event)
 
-
-    # -----------------------------------------------------
-    # COMMIT
-    # -----------------------------------------------------
-
     db.commit()
     db.refresh(payment)
 
@@ -429,10 +362,6 @@ def retry_payment(
     current_user: User = Depends(get_current_user),
 ):
 
-    # -----------------------------------------------------
-    # FIND PAYMENT
-    # -----------------------------------------------------
-
     payment = (
         db.query(Payment)
         .filter(
@@ -449,22 +378,12 @@ def retry_payment(
             detail="Payment not found",
         )
 
-
-    # -----------------------------------------------------
-    # SECURITY
-    # -----------------------------------------------------
-
     if payment.user_id != current_user.id:
 
         raise HTTPException(
             status_code=403,
             detail="You cannot retry this payment",
         )
-
-
-    # -----------------------------------------------------
-    # ONLY FAILED PAYMENTS CAN RETRY
-    # -----------------------------------------------------
 
     if payment.status not in [
         "FAILED",
@@ -478,11 +397,6 @@ def retry_payment(
                 "can be retried"
             ),
         )
-
-
-    # -----------------------------------------------------
-    # MAXIMUM RETRIES
-    # -----------------------------------------------------
 
     MAX_RETRIES = 3
 
@@ -506,11 +420,6 @@ def retry_payment(
 
         return payment
 
-
-    # -----------------------------------------------------
-    # START RETRY
-    # -----------------------------------------------------
-
     payment.retry_count += 1
     payment.status = "PROCESSING"
     payment.failure_reason = None
@@ -527,11 +436,6 @@ def retry_payment(
     )
 
     db.add(retry_event)
-
-
-    # -----------------------------------------------------
-    # SIMULATE SUCCESS
-    # -----------------------------------------------------
 
     payment.status = "COMPLETED"
     payment.updated_at = datetime.utcnow()
@@ -606,14 +510,12 @@ def get_payment(
             detail="Payment not found",
         )
 
-
     if payment.user_id != current_user.id:
 
         raise HTTPException(
             status_code=403,
             detail="You cannot access this payment",
         )
-
 
     return payment
 
@@ -628,10 +530,6 @@ def get_payment_events(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-
-    # -----------------------------------------------------
-    # FIND PAYMENT
-    # -----------------------------------------------------
 
     payment = (
         db.query(Payment)
@@ -649,22 +547,12 @@ def get_payment_events(
             detail="Payment not found",
         )
 
-
-    # -----------------------------------------------------
-    # SECURITY
-    # -----------------------------------------------------
-
     if payment.user_id != current_user.id:
 
         raise HTTPException(
             status_code=403,
             detail="You cannot access these events",
         )
-
-
-    # -----------------------------------------------------
-    # GET EVENTS
-    # -----------------------------------------------------
 
     events = (
         db.query(PaymentEvent)
@@ -700,9 +588,7 @@ def dashboard(
         .all()
     )
 
-
     total_payments = len(payments)
-
 
     completed_payments = sum(
         1
@@ -710,7 +596,6 @@ def dashboard(
         if payment.status
         == "COMPLETED"
     )
-
 
     failed_payments = sum(
         1
@@ -722,7 +607,6 @@ def dashboard(
         ]
     )
 
-
     pending_payments = sum(
         1
         for payment in payments
@@ -733,12 +617,10 @@ def dashboard(
         ]
     )
 
-
     total_amount = sum(
         float(payment.amount)
         for payment in payments
     )
-
 
     return {
         "total_payments": total_payments,
@@ -747,4 +629,3 @@ def dashboard(
         "pending_payments": pending_payments,
         "total_amount": total_amount,
     }
-
