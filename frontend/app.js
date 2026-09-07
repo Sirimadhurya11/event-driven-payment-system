@@ -1,4 +1,4 @@
-const API_URL = "http://127.0.0.1:8000";
+const API_URL = "https://event-driven-payment-system.onrender.com";
 
 // =========================================================
 // SESSION
@@ -95,7 +95,7 @@ async function apiRequest(endpoint, options = {}) {
     } catch (error) {
 
         throw new Error(
-            "Cannot connect to the backend. Make sure Uvicorn is running on http://127.0.0.1:8000"
+            "Cannot connect to the backend. Please check the deployed backend."
         );
     }
 
