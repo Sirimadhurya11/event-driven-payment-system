@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Payment Operations Dashboard
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+
+</head>
+
+
+<body>
+
+
+    <!-- =====================================================
+         LOGIN SCREEN
+         ===================================================== -->
+
+    <section
+        id="loginScreen"
+        class="screen"
+    >
+
+        <div class="login-card">
+
+            <h1>
+                Payment Operations
+            </h1>
+
+            <p class="subtitle">
+                Event-Driven Payment Processing System
+            </p>
+
+
+            <form id="loginForm">
+
+
+                <label for="username">
+                    Username
+                </label>
+
+
+                <input
+                    type="text"
+                    id="username"
+                    name="username"
+                    placeholder="Enter username"
+                    autocomplete="username"
+                    required
+                >
+
+
+                <label for="password">
+                    Password
+                </label>
+
+
+                <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    placeholder="Enter password"
+                    autocomplete="current-password"
+                    required
+                >
+
+
+                <button
+                    type="submit"
+                >
+                    Sign In
+                </button>
+
+
+                <p
+                    id="loginMessage"
+                    class="message"
+                ></p>
+
+
+            </form>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =====================================================
+         DASHBOARD
+         ===================================================== -->
+
+    <section
+        id="dashboardScreen"
+        class="hidden"
+    >
+
+
+        <!-- TOP BAR -->
+
+        <header class="topbar">
+
+
+            <div>
+
+                <h1>
+                    Payment Operations Dashboard
+                </h1>
+
+                <p>
+                    Real-time payment processing monitor
+                </p>
+
+            </div>
+
+
+            <button
+                id="logoutButton"
+                class="logout"
+                type="button"
+            >
+                Logout
+            </button>
+
+
+        </header>
+
+
+
+        <main class="container">
+
+
+            <!-- =================================================
+                 STATISTICS
+                 ================================================= -->
+
+            <section class="stats">
+
+
+                <div class="stat-card">
+
+                    <span>
+                        Total Payments
+                    </span>
+
+                    <strong id="totalPayments">
+                        0
+                    </strong>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <span>
+                        Completed
+                    </span>
+
+                    <strong id="completedPayments">
+                        0
+                    </strong>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <span>
+                        Failed
+                    </span>
+
+                    <strong id="failedPayments">
+                        0
+                    </strong>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <span>
+                        Pending
+                    </span>
+
+                    <strong id="pendingPayments">
+                        0
+                    </strong>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <span>
+                        Total Amount
+                    </span>
+
+                    <strong id="totalAmount">
+                        0.00
+                    </strong>
+
+                </div>
+
+
+            </section>
+
+
+
+            <!-- =================================================
+                 CREATE PAYMENT
+                 ================================================= -->
+
+            <section class="panel">
+
+
+                <div class="panel-header">
+
+
+                    <div>
+
+                        <h2>
+                            Create Payment
+                        </h2>
+
+                        <p>
+                            Create a new payment transaction.
+                        </p>
+
+                    </div>
+
+
+                </div>
+
+
+
+                <form
+                    id="paymentForm"
+                    class="payment-form"
+                >
+
+
+                    <div class="form-group">
+
+
+                        <label for="amount">
+                            Amount
+                        </label>
+
+
+                        <input
+                            type="number"
+                            id="amount"
+                            name="amount"
+                            min="0.01"
+                            step="0.01"
+                            placeholder="500"
+                            required
+                        >
+
+
+                    </div>
+
+
+
+                    <div class="form-group">
+
+
+                        <label for="currency">
+                            Currency
+                        </label>
+
+
+                        <select
+                            id="currency"
+                            name="currency"
+                        >
+
+
+                            <option value="USD">
+                                USD
+                            </option>
+
+
+                            <option value="EUR">
+                                EUR
+                            </option>
+
+
+                            <option value="GBP">
+                                GBP
+                            </option>
+
+
+                            <option value="INR">
+                                INR
+                            </option>
+
+
+                        </select>
+
+
+                    </div>
+
+
+
+                    <div class="form-group">
+
+
+                        <label for="idempotencyKey">
+                            Idempotency Key
+                        </label>
+
+
+                        <input
+                            type="text"
+                            id="idempotencyKey"
+                            name="idempotencyKey"
+                            placeholder="payment-test-001"
+                            required
+                        >
+
+
+                    </div>
+
+
+
+                    <button
+                        type="submit"
+                    >
+                        Create Payment
+                    </button>
+
+
+                </form>
+
+
+
+                <div
+                    id="paymentMessage"
+                    class="message"
+                ></div>
+
+
+            </section>
+
+
+
+            <!-- =================================================
+                 PAYMENT HISTORY
+                 ================================================= -->
+
+            <section class="panel">
+
+
+                <div class="panel-header">
+
+
+                    <div>
+
+                        <h2>
+                            Payment History
+                        </h2>
+
+                        <p>
+                            Monitor recent payment activity.
+                        </p>
+
+                    </div>
+
+
+
+                    <button
+                        id="refreshButton"
+                        class="secondary"
+                        type="button"
+                    >
+                        Refresh
+                    </button>
+
+
+                </div>
+
+
+
+                <div class="table-container">
+
+
+                    <table>
+
+
+                        <thead>
+
+                            <tr>
+
+
+                                <th>
+                                    Payment ID
+                                </th>
+
+
+                                <th>
+                                    Amount
+                                </th>
+
+
+                                <th>
+                                    Currency
+                                </th>
+
+
+                                <th>
+                                    Status
+                                </th>
+
+
+                                <th>
+                                    Retries
+                                </th>
+
+
+                                <th>
+                                    Created
+                                </th>
+
+
+                                <th>
+                                    Events
+                                </th>
+
+
+                                <th>
+                                    Action
+                                </th>
+
+
+                            </tr>
+
+                        </thead>
+
+
+
+                        <tbody id="paymentsTable">
+
+
+                            <tr>
+
+
+                                <td
+                                    colspan="8"
+                                    class="empty"
+                                >
+                                    No payments found.
+                                </td>
+
+
+                            </tr>
+
+
+                        </tbody>
+
+
+                    </table>
+
+
+                </div>
+
+
+            </section>
+
+
+
+            <!-- =================================================
+                 PAYMENT EVENTS
+                 ================================================= -->
+
+            <section
+                id="eventsPanel"
+                class="panel hidden"
+            >
+
+
+                <div class="panel-header">
+
+
+                    <div>
+
+
+                        <h2>
+                            Payment Events
+                        </h2>
+
+
+                        <p id="selectedPayment">
+                            Select a payment to view
+                            its event history.
+                        </p>
+
+
+                    </div>
+
+
+
+                    <button
+                        id="closeEvents"
+                        class="secondary"
+                        type="button"
+                    >
+                        Close
+                    </button>
+
+
+                </div>
+
+
+
+                <div
+                    id="eventsList"
+                    class="events-list"
+                ></div>
+
+
+            </section>
+
+
+        </main>
+
+
+    </section>
+
+
+
+    <!-- =====================================================
+         JAVASCRIPT
+         ===================================================== -->
+
+    <script src="app.js"></script>
+
+
+</body>
+
+</html>

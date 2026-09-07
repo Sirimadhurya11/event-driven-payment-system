@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+```
+<title>Payment Dashboard</title>
+
+<style>
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+    }
+
+    body {
+        background: #f4f6f9;
+        color: #222;
+    }
+
+    .navbar {
+        background: #1f2937;
+        color: white;
+        padding: 18px 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .navbar h1 {
+        font-size: 22px;
+    }
+
+    .logout-btn {
+        background: #ef4444;
+        border: none;
+        color: white;
+        padding: 9px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+
+    .logout-btn:hover {
+        background: #dc2626;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 30px auto;
+        padding: 0 20px;
+    }
+
+    .welcome {
+        margin-bottom: 25px;
+    }
+
+    .welcome h2 {
+        margin-bottom: 6px;
+    }
+
+    .welcome p {
+        color: #666;
+    }
+
+    .cards {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 18px;
+        margin-bottom: 30px;
+    }
+
+    .card {
+        background: white;
+        padding: 22px;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .card h3 {
+        color: #666;
+        font-size: 14px;
+        margin-bottom: 12px;
+    }
+
+    .card .value {
+        font-size: 28px;
+        font-weight: bold;
+    }
+
+    .completed {
+        border-left: 5px solid #22c55e;
+    }
+
+    .failed {
+        border-left: 5px solid #ef4444;
+    }
+
+    .pending {
+        border-left: 5px solid #f59e0b;
+    }
+
+    .total {
+        border-left: 5px solid #3b82f6;
+    }
+
+    .amount {
+        border-left: 5px solid #8b5cf6;
+    }
+
+    .section {
+        background: white;
+        border-radius: 10px;
+        padding: 25px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        margin-bottom: 30px;
+    }
+
+    .section h2 {
+        margin-bottom: 20px;
+    }
+
+    /* CREATE PAYMENT */
+
+    .payment-form {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .form-group.full {
+        grid-column: 1 / -1;
+    }
+
+    .form-group label {
+        margin-bottom: 7px;
+        font-size: 14px;
+        font-weight: bold;
+        color: #374151;
+    }
+
+    .form-group input,
+    .form-group select {
+        padding: 11px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 15px;
+        outline: none;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+        border-color: #2563eb;
+    }
+
+    .create-btn {
+        grid-column: 1 / -1;
+        background: #16a34a;
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 6px;
+        font-size: 15px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .create-btn:hover {
+        background: #15803d;
+    }
+
+    .create-btn:disabled {
+        background: #86efac;
+        cursor: not-allowed;
+    }
+
+    .help-text {
+        margin-top: 7px;
+        color: #6b7280;
+        font-size: 12px;
+    }
+
+    /* TABLE */
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th,
+    td {
+        padding: 13px;
+        text-align: left;
+        border-bottom: 1px solid #eee;
+    }
+
+    th {
+        background: #f8fafc;
+    }
+
+    .status {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: bold;
+    }
+
+    .status.completed {
+        background: #dcfce7;
+        color: #166534;
+        border-left: none;
+    }
+
+    .status.failed {
+        background: #fee2e2;
+        color: #991b1b;
+        border-left: none;
+    }
+
+    .status.processing,
+    .status.pending {
+        background: #fef3c7;
+        color: #92400e;
+        border-left: none;
+    }
+
+    .status.permanently_failed {
+        background: #fecaca;
+        color: #7f1d1d;
+        border-left: none;
+    }
+
+    .retry-btn {
+        background: #2563eb;
+        color: white;
+        border: none;
+        padding: 7px 12px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .retry-btn:hover {
+        background: #1d4ed8;
+    }
+
+    .message {
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 6px;
+        display: none;
+    }
+
+    .error {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .success {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .loading {
+        text-align: center;
+        padding: 30px;
+        color: #666;
+    }
+
+    @media (max-width: 900px) {
+        .cards {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .payment-form {
+            grid-template-columns: 1fr;
+        }
+
+        .form-group.full,
+        .create-btn {
+            grid-column: auto;
+        }
+
+        table {
+            font-size: 13px;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .cards {
+            grid-template-columns: 1fr;
+        }
+
+        .navbar {
+            padding: 15px;
+        }
+
+        .container {
+            padding: 0 10px;
+        }
+
+        .section {
+            overflow-x: auto;
+        }
+    }
+</style>
+```
+
+</head>
+
+<body>
+
+```
+<nav class="navbar">
+
+    <h1>Payment Processing Dashboard</h1>
+
+    <button class="logout-btn" onclick="logout()">
+        Logout
+    </button>
+
+</nav>
+
+
+<div class="container">
+
+    <div class="welcome">
+
+        <h2>Dashboard</h2>
+
+        <p>
+            Monitor your payment transactions and processing status.
+        </p>
+
+    </div>
+
+
+    <div id="message" class="message"></div>
+
+
+    <!-- DASHBOARD CARDS -->
+
+    <div class="cards">
+
+        <div class="card total">
+            <h3>Total Payments</h3>
+            <div class="value" id="totalPayments">0</div>
+        </div>
+
+        <div class="card completed">
+            <h3>Completed</h3>
+            <div class="value" id="completedPayments">0</div>
+        </div>
+
+        <div class="card failed">
+            <h3>Failed</h3>
+            <div class="value" id="failedPayments">0</div>
+        </div>
+
+        <div class="card pending">
+            <h3>Pending / Processing</h3>
+            <div class="value" id="pendingPayments">0</div>
+        </div>
+
+        <div class="card amount">
+            <h3>Total Amount</h3>
+            <div class="value" id="totalAmount">0.00</div>
+        </div>
+
+    </div>
+
+
+    <!-- CREATE NEW PAYMENT -->
+
+    <div class="section">
+
+        <h2>Create New Payment</h2>
+
+        <form id="paymentForm" class="payment-form">
+
+            <div class="form-group">
+
+                <label for="amount">
+                    Amount
+                </label>
+
+                <input
+                    type="number"
+                    id="amount"
+                    min="0.01"
+                    step="0.01"
+                    placeholder="Enter amount"
+                    required
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="currency">
+                    Currency
+                </label>
+
+                <select id="currency" required>
+
+                    <option value="USD">
+                        USD
+                    </option>
+
+                    <option value="EUR">
+                        EUR
+                    </option>
+
+                    <option value="GBP">
+                        GBP
+                    </option>
+
+                    <option value="INR" selected>
+                        INR
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="form-group full">
+
+                <label for="idempotencyKey">
+                    Idempotency Key
+                </label>
+
+                <input
+                    type="text"
+                    id="idempotencyKey"
+                    placeholder="Enter unique idempotency key"
+                    required
+                >
+
+                <div class="help-text">
+                    Use a unique key for each new payment.
+                    Reusing the same key tests idempotency.
+                </div>
+
+            </div>
+
+
+            <button
+                type="submit"
+                class="create-btn"
+                id="createPaymentButton"
+            >
+                Create Payment
+            </button>
+
+        </form>
+
+    </div>
+
+
+    <!-- PAYMENTS TABLE -->
+
+    <div class="section">
+
+        <h2>Payment Transactions</h2>
+
+        <div id="tableLoading" class="loading">
+            Loading payments...
+        </div>
+
+        <table id="paymentsTable" style="display:none;">
+
+            <thead>
+
+                <tr>
+
+                    <th>Payment ID</th>
+                    <th>Amount</th>
+                    <th>Currency</th>
+                    <th>Status</th>
+                    <th>Retries</th>
+                    <th>Created</th>
+                    <th>Action</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody id="paymentsBody">
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+```
+
+<script>
+
+const API_URL = "http://127.0.0.1:8000";
+
+
+/* =========================================================
+   AUTHENTICATION
+   ========================================================= */
+
+function getToken() {
+
+    return localStorage.getItem("access_token");
+
+}
+
+
+/* =========================================================
+   CHECK LOGIN
+   ========================================================= */
+
+function checkAuthentication() {
+
+    const token = getToken();
+
+    if (!token) {
+
+        window.location.href = "login.html";
+
+        return false;
+
+    }
+
+    return true;
+
+}
+
+
+/* =========================================================
+   MESSAGE
+   ========================================================= */
+
+function showMessage(message, type = "success") {
+
+    const element =
+        document.getElementById("message");
+
+    element.textContent = message;
+
+    element.className =
+        "message " + type;
+
+    element.style.display = "block";
+
+
+    setTimeout(() => {
+
+        element.style.display = "none";
+
+    }, 4000);
+
+}
+
+
+/* =========================================================
+   GENERATE IDEMPOTENCY KEY
+   ========================================================= */
+
+function generateIdempotencyKey() {
+
+    return "payment-" +
+        Date.now() +
+        "-" +
+        Math.random()
+            .toString(36)
+            .substring(2, 10);
+
+}
+
+
+/* =========================================================
+   CREATE PAYMENT
+   ========================================================= */
+
+async function createPayment(event) {
+
+    event.preventDefault();
+
+
+    const token = getToken();
+
+    const amount =
+        document.getElementById("amount").value;
+
+    const currency =
+        document.getElementById("currency").value;
+
+    const idempotencyKey =
+        document.getElementById("idempotencyKey")
+            .value
+            .trim();
+
+
+    if (!amount || Number(amount) <= 0) {
+
+        showMessage(
+            "Amount must be greater than zero.",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    if (!idempotencyKey) {
+
+        showMessage(
+            "Idempotency key is required.",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    const button =
+        document.getElementById(
+            "createPaymentButton"
+        );
+
+
+    button.disabled = true;
+
+    button.textContent =
+        "Creating Payment...";
+
+
+    try {
+
+        const response = await fetch(
+            `${API_URL}/payments`,
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+
+                body: JSON.stringify({
+
+                    amount: Number(amount),
+
+                    currency: currency,
+
+                    idempotency_key:
+                        idempotencyKey
+
+                })
+
+            }
+        );
+
+
+        const data =
+            await response.json();
+
+
+        if (response.status === 401) {
+
+            logout();
+
+            return;
+
+        }
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.detail ||
+                "Payment creation failed."
+            );
+
+        }
+
+
+        showMessage(
+            `Payment ${data.payment_id} created successfully.`,
+            "success"
+        );
+
+
+        /*
+         * Clear amount.
+         * Generate a fresh key for the next payment.
+         */
+
+        document.getElementById(
+            "amount"
+        ).value = "";
+
+        document.getElementById(
+            "idempotencyKey"
+        ).value =
+            generateIdempotencyKey();
+
+
+        /*
+         * Refresh dashboard and table.
+         */
+
+        await loadDashboard();
+
+        await loadPayments();
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Create payment error:",
+            error
+        );
+
+        showMessage(
+            error.message ||
+            "Unable to create payment.",
+            "error"
+        );
+
+    }
+
+    finally {
+
+        button.disabled = false;
+
+        button.textContent =
+            "Create Payment";
+
+    }
+
+}
+
+
+/* =========================================================
+   LOAD DASHBOARD
+   ========================================================= */
+
+async function loadDashboard() {
+
+    const token = getToken();
+
+    try {
+
+        const response = await fetch(
+            `${API_URL}/dashboard`,
+            {
+                method: "GET",
+
+                headers: {
+                    "Authorization":
+                        `Bearer ${token}`
+                }
+            }
+        );
+
+
+        if (response.status === 401) {
+
+            logout();
+
+            return;
+
+        }
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Failed to load dashboard"
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        document.getElementById(
+            "totalPayments"
+        ).textContent =
+            data.total_payments;
+
+
+        document.getElementById(
+            "completedPayments"
+        ).textContent =
+            data.completed_payments;
+
+
+        document.getElementById(
+            "failedPayments"
+        ).textContent =
+            data.failed_payments;
+
+
+        document.getElementById(
+            "pendingPayments"
+        ).textContent =
+            data.pending_payments;
+
+
+        document.getElementById(
+            "totalAmount"
+        ).textContent =
+            Number(
+                data.total_amount
+            ).toFixed(2);
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        showMessage(
+            "Unable to load dashboard.",
+            "error"
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   LOAD PAYMENTS
+   ========================================================= */
+
+async function loadPayments() {
+
+    const token = getToken();
+
+    try {
+
+        const response = await fetch(
+            `${API_URL}/payments`,
+            {
+                method: "GET",
+
+                headers: {
+                    "Authorization":
+                        `Bearer ${token}`
+                }
+            }
+        );
+
+
+        if (response.status === 401) {
+
+            logout();
+
+            return;
+
+        }
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Failed to load payments"
+            );
+
+        }
+
+
+        const payments =
+            await response.json();
+
+
+        const tbody =
+            document.getElementById(
+                "paymentsBody"
+            );
+
+
+        tbody.innerHTML = "";
+
+
+        if (payments.length === 0) {
+
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7"
+                        style="text-align:center;">
+                        No payments found.
+                    </td>
+                </tr>
+            `;
+
+        }
+
+
+        payments.forEach(payment => {
+
+            const row =
+                document.createElement("tr");
+
+
+            const paymentStatus =
+                String(payment.status)
+                    .toLowerCase();
+
+
+            let action = "-";
+
+
+            if (
+                paymentStatus === "failed" ||
+                paymentStatus === "permanently_failed"
+            ) {
+
+                action = `
+                    <button
+                        class="retry-btn"
+                        onclick="retryPayment('${payment.payment_id}')">
+                        Retry
+                    </button>
+                `;
+
+            }
+
+
+            const createdDate =
+                payment.created_at
+                    ? new Date(
+                        payment.created_at
+                    ).toLocaleString()
+                    : "-";
+
+
+            row.innerHTML = `
+
+                <td>
+                    ${payment.payment_id}
+                </td>
+
+                <td>
+                    ${Number(
+                        payment.amount
+                    ).toFixed(2)}
+                </td>
+
+                <td>
+                    ${payment.currency}
+                </td>
+
+                <td>
+                    <span class="status ${paymentStatus}">
+                        ${payment.status}
+                    </span>
+                </td>
+
+                <td>
+                    ${payment.retry_count}
+                </td>
+
+                <td>
+                    ${createdDate}
+                </td>
+
+                <td>
+                    ${action}
+                </td>
+
+            `;
+
+
+            tbody.appendChild(row);
+
+        });
+
+
+        document.getElementById(
+            "tableLoading"
+        ).style.display = "none";
+
+
+        document.getElementById(
+            "paymentsTable"
+        ).style.display = "table";
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        document.getElementById(
+            "tableLoading"
+        ).textContent =
+            "Unable to load payments.";
+
+    }
+
+}
+
+
+/* =========================================================
+   RETRY PAYMENT
+   ========================================================= */
+
+async function retryPayment(paymentId) {
+
+    const token = getToken();
+
+
+    if (!confirm(
+        "Do you want to retry this payment?"
+    )) {
+
+        return;
+
+    }
+
+
+    try {
+
+        const response = await fetch(
+            `${API_URL}/payments/${paymentId}/retry`,
+            {
+                method: "POST",
+
+                headers: {
+                    "Authorization":
+                        `Bearer ${token}`
+                }
+            }
+        );
+
+
+        const data =
+            await response.json();
+
+
+        if (response.status === 401) {
+
+            logout();
+
+            return;
+
+        }
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.detail ||
+                "Retry failed"
+            );
+
+        }
+
+
+        showMessage(
+            "Payment retried successfully.",
+            "success"
+        );
+
+
+        await loadDashboard();
+
+        await loadPayments();
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        showMessage(
+            error.message,
+            "error"
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   LOGOUT
+   ========================================================= */
+
+function logout() {
+
+    localStorage.removeItem(
+        "access_token"
+    );
+
+    window.location.href =
+        "login.html";
+
+}
+
+
+/* =========================================================
+   INITIALIZE
+   ========================================================= */
+
+async function initializeDashboard() {
+
+    if (!checkAuthentication()) {
+
+        return;
+
+    }
+
+
+    /*
+     * Generate an initial idempotency key.
+     */
+
+    document.getElementById(
+        "idempotencyKey"
+    ).value =
+        generateIdempotencyKey();
+
+
+    await loadDashboard();
+
+    await loadPayments();
+
+}
+
+
+/* =========================================================
+   FORM EVENT
+   ========================================================= */
+
+document.getElementById(
+    "paymentForm"
+).addEventListener(
+    "submit",
+    createPayment
+);
+
+
+/* =========================================================
+   START
+   ========================================================= */
+
+initializeDashboard();
+
+</script>
+
+</body>
+</html>
