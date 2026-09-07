@@ -1,15 +1,29 @@
-import bcrypt
+import os
 from datetime import datetime, timedelta, timezone
 
+import bcrypt
+from dotenv import load_dotenv
 from fastapi import HTTPException, status
 from jose import JWTError, jwt
+
+
+# =========================================================
+# LOAD ENVIRONMENT VARIABLES
+# =========================================================
+
+load_dotenv()
 
 
 # =========================================================
 # JWT CONFIGURATION
 # =========================================================
 
-SECRET_KEY = "change-this-to-a-long-random-secret-key-123456789"
+SECRET_KEY = os.getenv("SECRET_KEY")
+
+if not SECRET_KEY:
+    raise RuntimeError(
+        "SECRET_KEY is missing. Please add SECRET_KEY to your environment variables."
+    )
 
 ALGORITHM = "HS256"
 
@@ -103,5 +117,4 @@ def decode_access_token(token: str) -> str:
         return username
 
     except JWTError:
-
         raise credentials_exception
